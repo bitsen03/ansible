@@ -1,67 +1,70 @@
-- hosts: webservers
-  become: true
-  tasks:
-    - name: create user (ansible-worker)
-      user:
-        name: ansible-worker
-      tags: [user, ansible-worker]
+---
+- name: configure_web_server
+  hosts: webservers
+  become: yes
 
-    - name: install git
-      apt:
+  tasks:
+    - name: create_ansible-worker user
+      ansible.builtin.user:
+        name: ansible-worker
+
+    - name: install_git
+      ansible.builtin.apt:
         name: git
         state: present
-        update_cache: yes
-      tags: [git]
 
-    - name: add ssh key
-      authorized_key:
-        key: "{{ lookup('file', '../ssh_keys/id_rsa.pub') }}"
-        user: ansible-worker
-      tags: [ssh, ansible-worker]
+    - name: copy_ssh_keys
+      ansible.builtin.copy:
+        src: ssh_keys/
+        dest: /home/ansible-worker/.ssh/
+        owner: ansible-worker
+        group: ansible-worker
+        mode: 0600
 
-    - name: create www dir
-      file:
-        path: /home/ansible-worker/www
-        state: directory
+    - name: clone_repository
+      ansible.builtin.git:
+        repo: "https://github.com/iphilka/stud-template.git"
+        dest: "/home/ansible-worker/www/stud-template"
+        update: no
+        clone: yes
 
-    - name: git clone repo
-      git:
-        repo: https://github.com/iphilka/stud-template.git
-        dest: /home/ansible-worker/www/stud-template
-        force: yes
-      
-    - name: update index.html
-      template:
+    - name: replace_index.html
+      ansible.builtin.copy:
         src: ../index.html
         dest: /home/ansible-worker/www/stud-template/index.html
+        owner: ansible-worker
+        group: ansible-worker
+        mode: 0644
 
-    - name: install nginx
-      apt:
+    - name: set_read_permissions_for_ansible-worker_directory
+      ansible.builtin.file:
+        path: /home/ansible-worker
+        owner: ansible-worker
+        group: ansible-worker
+        mode: "0755"
+        recurse: yes
+
+
+    - name: install_nginx
+      ansible.builtin.apt:
         name: nginx
         state: present
-        update_cache: yes
 
-    - name: add nginx config
-      template:
+    - name: copy_nginx_configuration
+      ansible.builtin.template:
         src: ../ansible.iphilka.ru.conf
         dest: /etc/nginx/sites-available/ansible.iphilka.ru.conf
-    
-    - name: Create symbolic link in sites-enabled
-      file:
+      notify: Restart Nginx
+
+    - name: create_symbolic_link_for_nginx_config
+      ansible.builtin.file:
         src: /etc/nginx/sites-available/ansible.iphilka.ru.conf
         dest: /etc/nginx/sites-enabled/ansible.iphilka.ru.conf
         state: link
-      notify: Reload Nginx
+      notify: Restart Nginx
 
-    - name: create symlink
-      file: 
-        src: /etc/nginx/sites-available/ansible.iphilka.ru.conf
-        dest: /etc/nginx/sites-enabled/ansible.iphilka.ru
-        state: link
-      notify:
-        - restart nginx
-      
+  handlers:
     - name: restart nginx
-      service:
+      ansible.builtin.service:
         name: nginx
-        state: reloaded
+        state: restarted
