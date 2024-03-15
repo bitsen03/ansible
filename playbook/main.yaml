@@ -54,14 +54,14 @@
       ansible.builtin.template:
         src: ../ansible.iphilka.ru.conf
         dest: /etc/nginx/sites-available/ansible.iphilka.ru.conf
-      notify: Restart Nginx
+      notify: restart nginx
 
     - name: create_symbolic_link_for_nginx_config
       ansible.builtin.file:
         src: /etc/nginx/sites-available/ansible.iphilka.ru.conf
         dest: /etc/nginx/sites-enabled/ansible.iphilka.ru.conf
         state: link
-      notify: Restart Nginx
+      notify: restart nginx
 
   handlers:
     - name: restart nginx
