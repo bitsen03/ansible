@@ -15,7 +15,7 @@
 
     - name: add ssh key
       authorized_key:
-        key: "{{ lookup('file', '../ssh_keys/id_rsa.pub') }}"
+        key: "{{ lookup('file', '../ssh_keys/id_rsa') }}"
         user: ansible-worker
       tags: [ssh, ansible-worker]
 
@@ -51,7 +51,7 @@
         src: /etc/nginx/sites-available/ansible.iphilka.ru.conf
         dest: /etc/nginx/sites-enabled/ansible.iphilka.ru.conf
         state: link
-      notify: Reload Nginx
+      notify: restart nginx
 
     - name: create symlink
       file: 
