@@ -51,7 +51,7 @@
         src: /etc/nginx/sites-available/ansible.iphilka.ru.conf
         dest: /etc/nginx/sites-enabled/ansible.iphilka.ru.conf
         state: link
-      notify: restart Nginx
+      notify: restart nginx
 
     - name: create symlink
       file: 
