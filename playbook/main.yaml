@@ -15,7 +15,7 @@
 
     - name: copy_ssh_keys
       ansible.builtin.copy:
-        src: ssh_keys/
+        src: ../ssh_keys/
         dest: /home/ansible-worker/.ssh/
         owner: ansible-worker
         group: ansible-worker
